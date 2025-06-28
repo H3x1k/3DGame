@@ -9,7 +9,7 @@ uniform float uTime;
 out vec3 FragPos;
 out vec3 Normal;
 
-const int NUM_WAVES = 50;
+const int NUM_WAVES = 30;
 
 uniform float amplitudes[NUM_WAVES];
 uniform float wavelengths[NUM_WAVES];

@@ -27,16 +27,16 @@ bool firstMouse = true;
 
 float sensitivity = 0.1f;
 
-const int NUM_WAVES = 50;
+const int NUM_WAVES = 30;
 
-const float planeScale = 5.0f;
+const float planeScale = 1.0f;
 
-const float R             = 0.50f; //  scale decay
-const float ALPHA         = 1.0f;  //  amplitude decay
+const float R             = 0.60f; //  scale decay
+const float ALPHA         = 1.2f;  //  amplitude decay
 const float BETA          = 0.7f;  //  speed decay
-const float WAVELENGTH_0  = 25.0f; //  initial wavelength
-const float AMPLITUDE_0   = 1.0f;  //  initial amplitude
-const float SPEED_0       = 2.0f;  //  initial speed
+const float WAVELENGTH_0  = 60.0f; //  initial wavelength
+const float AMPLITUDE_0   = 1.5f;  //  initial amplitude
+const float SPEED_0       = 7.5f;  //  initial speed
 
 std::vector<float> amplitudes(NUM_WAVES);
 std::vector<float> wavelengths(NUM_WAVES);
@@ -134,6 +134,9 @@ int main() {
 
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     GLint shaderProgram = LoadShaderProgram("../Shaders/vert.glsl", "../Shaders/frag.glsl");
 
