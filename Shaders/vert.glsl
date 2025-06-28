@@ -8,6 +8,7 @@ uniform float uTime;
 
 out vec3 FragPos;
 out vec3 Normal;
+out float FoamAmount;
 
 const int NUM_WAVES = 30;
 
@@ -47,9 +48,6 @@ void main() {
     vec3 totalTangent = vec3(1.0, 0.0, 0.0);
     vec3 totalBinormal = vec3(0.0, 0.0, 1.0);
 
-   
-
-    // this could be wrong
     for (int i = 0; i < NUM_WAVES; ++i) {
         vec3 tangent, binormal;
         vec3 offset = gerstnerWave(
@@ -67,10 +65,26 @@ void main() {
         totalBinormal += binormal;
     }
 
+    float foam = 0.0;
+
+    for (int i = 0; i < NUM_WAVES; ++i) {
+        float k = 6.28318 / wavelengths[i];
+        vec2 d = normalize(directions[i]);
+        float f = k * dot(d, pos.xz) - speeds[i] * k * uTime;
+        float sinF = sin(f);
+
+        float d2ydx2 = -amplitudes[i] * k * k * d.x * d.x * sinF;
+        float d2ydz2 = -amplitudes[i] * k * k * d.y * d.y * sinF;
+
+        float curvature = abs(d2ydx2 + d2ydz2); // Laplacian magnitude
+        foam += curvature;
+    }
+
     pos += totalOffset;
-    vec3 normal = normalize(cross(totalBinormal, totalTangent)); // this too
+    vec3 normal = normalize(cross(totalBinormal, totalTangent));
 
     FragPos = vec3(model * vec4(pos, 1.0));
     Normal = mat3(transpose(inverse(model))) * normal;
+    FoamAmount = foam;
     gl_Position = projection * view * vec4(FragPos, 1.0);
 }

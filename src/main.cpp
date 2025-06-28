@@ -19,7 +19,7 @@ glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraRight = glm::vec3(1.0f, 0.0f, 0.0f);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
-glm::vec3 lightDir = glm::normalize(glm::vec3(-0.5f, -1.0f, -0.3f));
+glm::vec3 lightDir = glm::normalize(glm::vec3(-0.9f, -0.5f, -0.3f));
 
 float yaw = 0.0f;
 float pitch = 20.0f;
@@ -32,7 +32,7 @@ const int NUM_WAVES = 30;
 const float planeScale = 1.0f;
 
 const float R             = 0.60f; //  scale decay
-const float ALPHA         = 1.2f;  //  amplitude decay
+const float ALPHA         = 0.8f;  //  amplitude decay
 const float BETA          = 0.7f;  //  speed decay
 const float WAVELENGTH_0  = 60.0f; //  initial wavelength
 const float AMPLITUDE_0   = 1.5f;  //  initial amplitude
