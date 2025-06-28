@@ -8,28 +8,22 @@
 #include <iostream>
 #include <vector>
 
-#include "stb_image.h"
+#include "PlaneMesh.h";
+#include "Shader.h";
 
 const unsigned int WIDTH = 800;
 const unsigned int HEIGHT = 800;
 
-const float G = 1.0f; //6.7e-11f
-const float c = 1.0f; //3.0e8f
-const float M = 1.0f; //1.9e31f
-const float R = 2.0f * G * M / c / c;
-
-glm::vec3 cameraPos = glm::vec3(0.0f, 5.0f, 18.0f * R);
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 0.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 glm::vec3 cameraRight = glm::vec3(1.0f, 0.0f, 0.0f);
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
 float yaw = 0.0f;
 float pitch = 20.0f;
 bool firstMouse = true;
 
 float sensitivity = 0.1f;
-
-glm::vec3 blackholePos = glm::vec3(0.0f, 0.0f, 0.0f);
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     static float lastX = 800.0f / 2.0;
@@ -51,18 +45,26 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     yoffset *= sensitivity;
 
     yaw += xoffset;
-    pitch += yoffset;
+    pitch -= yoffset;
 
     if (pitch > 89.0f) pitch = 89.0f;
     if (pitch < -89.0f) pitch = -89.0f;
 
     float sinyaw = sin(glm::radians(yaw));
     float cosyaw = cos(glm::radians(yaw));
+    float sinpit = sin(glm::radians(pitch));
+    float cospit = cos(glm::radians(pitch));
 
-    glm::vec3 frontdir;
+    /*glm::vec3 frontdir;
     frontdir.x = sinyaw;
     frontdir.y = 0.0f;
     frontdir.z = -cosyaw;
+    cameraFront = frontdir;*/
+
+    glm::vec3 frontdir;
+    frontdir.x = sinyaw * cospit;
+    frontdir.y = sinpit;
+    frontdir.z = -cosyaw * cospit;
     cameraFront = frontdir;
 
     glm::vec3 rightdir;
@@ -159,35 +161,6 @@ unsigned int createShaderProgram(const char* vertexPath, const char* fragmentPat
     return program;
 }
 
-unsigned int loadCubemap(std::vector<std::string> faces) {
-    unsigned int textureID;
-    glGenTextures(1, &textureID);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
-
-    int width, height, nrChannels;
-    for (unsigned int i = 0; i < faces.size(); i++) {
-        unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
-        if (data) {
-            glTexImage2D(
-                GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
-                0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
-            );
-            stbi_image_free(data);
-        }
-        else {
-            std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
-            stbi_image_free(data);
-        }
-    }
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-    return textureID;
-}
-
 int main() {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -207,49 +180,9 @@ int main() {
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    float quadVertices[] = {
-        // positions   // texCoords
-        -1.0f,  1.0f,  0.0f, 1.0f,  // top-left
-        -1.0f, -1.0f,  0.0f, 0.0f,  // bottom-left
-         1.0f, -1.0f,  1.0f, 0.0f,  // bottom-right
+    GLint shaderProgram = LoadShaderProgram("../Shaders/vert.glsl", "../Shaders/frag.glsl");
 
-        -1.0f,  1.0f,  0.0f, 1.0f,  // top-left
-         1.0f, -1.0f,  1.0f, 0.0f,  // bottom-right
-         1.0f,  1.0f,  1.0f, 1.0f   // top-right
-    };
-
-    unsigned int quadVAO, quadVBO;
-    glGenVertexArrays(1, &quadVAO);
-    glGenBuffers(1, &quadVBO);
-    glBindVertexArray(quadVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0); // position
-    glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float))); // texcoord
-    glEnableVertexAttribArray(1);
-
-
-    unsigned int shaderProgram = createShaderProgram(
-        "../Shaders/vertex_shader.glsl", 
-        "../Shaders/fragment_shader.glsl"//relativity_frag_shader.glsl
-    );
-
-    std::vector<std::string> faces = { // _2.png is 4096x4096, _.png is 512x512
-        "../Skybox/right2.png",
-        "../Skybox/left2.png",
-        "../Skybox/top2.png",
-        "../Skybox/bottom2.png",
-        "../Skybox/front2.png",
-        "../Skybox/back2.png"
-    };
-    unsigned int cubemapTexture = loadCubemap(faces);
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-
+    PlaneMesh plane(256);
 
     float lastFrame = 0.0f;
     float startTime = glfwGetTime();
@@ -261,10 +194,7 @@ int main() {
         float currentFrame = glfwGetTime();
         float deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
-
-        float time = glfwGetTime() - startTime;
-
-        std::cout << 1 / deltaTime << std::endl;
+        //std::cout << 1 / deltaTime << std::endl;
 
         processInput(window, deltaTime);
 
@@ -272,45 +202,38 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(shaderProgram);
-        
 
+        float timeValue = glfwGetTime();
+        glUseProgram(shaderProgram);
+        glUniform1f(glGetUniformLocation(shaderProgram, "uTime"), timeValue);
+        
+        // Model Matrix
+        glm::mat4 model = glm::mat4(1.0f);
+
+        // View Matrix
         glm::mat4 yawMat = glm::rotate(glm::mat4(1.0), glm::radians(yaw), glm::vec3(0.0, 1.0, 0.0));
         glm::mat4 pitchMat = glm::rotate(glm::mat4(1.0), glm::radians(pitch), cameraRight);
-
         glm::mat4 rotation = yawMat * pitchMat;
         glm::mat4 view = glm::inverse(rotation * glm::translate(glm::mat4(1.0f), -cameraPos));
 
+        view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+
+        // Projection Matrix
         glm::mat4 projection = glm::perspective(glm::radians(90.0f), (float)WIDTH / HEIGHT, 0.1f, 100.0f);
 
-        unsigned int viewLoc = glGetUniformLocation(shaderProgram, "view");
-        unsigned int camPosLoc = glGetUniformLocation(shaderProgram, "cameraPos");
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-        glUniform3fv(camPosLoc, 1, glm::value_ptr(cameraPos));
-
-        int width, height;
-        glfwGetFramebufferSize(window, &width, &height);
-        GLint resLoc = glGetUniformLocation(shaderProgram, "resolution");
-        glUniform2f(resLoc, (float)width, (float)height);
-
-        unsigned int bhPosLoc = glGetUniformLocation(shaderProgram, "bhPos");
-        unsigned int MLoc = glGetUniformLocation(shaderProgram, "M");
-        unsigned int RLoc = glGetUniformLocation(shaderProgram, "R");
-        unsigned int timeLoc = glGetUniformLocation(shaderProgram, "time");
-
-        glUniform3fv(bhPosLoc, 1, glm::value_ptr(blackholePos));
-        glUniform1f(MLoc, M);
-        glUniform1f(RLoc, R);
-        glUniform1f(timeLoc, time);
+        // Sending Uniforms to GPU
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+        glUniform1f(glGetUniformLocation(shaderProgram, "uTime"), glfwGetTime());
         
-        glBindVertexArray(quadVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        // Draw
+        plane.draw();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    glDeleteVertexArrays(1, &quadVAO);
-    glDeleteBuffers(1, &quadVBO);
     glfwTerminate();
     return 0;
 }
