@@ -106,7 +106,10 @@ int main() {
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
     const GLFWvidmode* mode = glfwGetVideoMode(monitor);
 
-    GLFWwindow* window = glfwCreateWindow(mode->width, mode->height, "Black Hole Simulation", monitor, nullptr);
+    //GLFWwindow* window = glfwCreateWindow(mode->width, mode->height, "Black Hole Simulation", monitor, nullptr);
+    GLFWwindow* window = glfwCreateWindow(mode->width, mode->height, "Water Simulation", nullptr, nullptr);
+    glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_FALSE);
+    glfwSetWindowPos(window, 0, 0);
     //GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Black Hole Simulation", nullptr, nullptr);
     glfwMakeContextCurrent(window);
 
