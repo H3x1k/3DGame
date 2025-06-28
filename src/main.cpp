@@ -19,13 +19,29 @@ glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraRight = glm::vec3(1.0f, 0.0f, 0.0f);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
-glm::vec3 lightDir = glm::normalize(glm::vec3(-0.3f, -1.0f, -0.3f));
+glm::vec3 lightDir = glm::normalize(glm::vec3(-0.5f, -1.0f, -0.3f));
 
 float yaw = 0.0f;
 float pitch = 20.0f;
 bool firstMouse = true;
 
 float sensitivity = 0.1f;
+
+const int NUM_WAVES = 50;
+
+const float planeScale = 5.0f;
+
+const float R             = 0.50f; //  scale decay
+const float ALPHA         = 1.0f;  //  amplitude decay
+const float BETA          = 0.7f;  //  speed decay
+const float WAVELENGTH_0  = 25.0f; //  initial wavelength
+const float AMPLITUDE_0   = 1.0f;  //  initial amplitude
+const float SPEED_0       = 2.0f;  //  initial speed
+
+std::vector<float> amplitudes(NUM_WAVES);
+std::vector<float> wavelengths(NUM_WAVES);
+std::vector<float> speeds(NUM_WAVES);
+std::vector<glm::vec2> directions(NUM_WAVES);
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     static float lastX = 800.0f / 2.0;
@@ -123,6 +139,37 @@ int main() {
 
     PlaneMesh plane(256);
 
+
+    auto hash = [](float n) -> float {
+        return glm::fract(sin(n) * 43758.5453123f);
+        };
+
+    for (int i = 0; i < NUM_WAVES; ++i) {
+        float wavelength = WAVELENGTH_0 * pow(R, i);
+        float amplitude = AMPLITUDE_0 * pow(R, ALPHA * i);
+        float speed = SPEED_0 * pow(R, BETA * i);
+
+        float k = 6.28318f / wavelength;
+        if (k * amplitude >= 1.0f)
+            amplitude = 0.9f / k;
+
+        float angle = hash(float(i)) * 6.28318f;
+        glm::vec2 direction = glm::vec2(cos(angle), sin(angle));
+
+        amplitudes[i] = amplitude;
+        wavelengths[i] = wavelength;
+        speeds[i] = speed;
+        directions[i] = direction;
+    }
+
+    glUseProgram(shaderProgram);
+
+    glUniform1fv(glGetUniformLocation(shaderProgram, "amplitudes"), NUM_WAVES, amplitudes.data());
+    glUniform1fv(glGetUniformLocation(shaderProgram, "wavelengths"), NUM_WAVES, wavelengths.data());
+    glUniform1fv(glGetUniformLocation(shaderProgram, "speeds"), NUM_WAVES, speeds.data());
+    glUniform2fv(glGetUniformLocation(shaderProgram, "directions"), NUM_WAVES, &directions[0].x);
+
+
     float lastFrame = 0.0f;
     float startTime = glfwGetTime();
 
@@ -145,10 +192,10 @@ int main() {
         glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glUseProgram(shaderProgram);
+        
         
         // Model Matrix
-        glm::mat4 model = glm::mat4(1.0f);
+        glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(planeScale, 1.0f, planeScale));
 
         // View Matrix
         glm::mat4 yawMat = glm::rotate(glm::mat4(1.0), glm::radians(yaw), glm::vec3(0.0, 1.0, 0.0));
