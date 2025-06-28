@@ -19,6 +19,8 @@ glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraRight = glm::vec3(1.0f, 0.0f, 0.0f);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
+glm::vec3 lightDir = glm::normalize(glm::vec3(-0.3f, -1.0f, -0.3f));
+
 float yaw = 0.0f;
 float pitch = 20.0f;
 bool firstMouse = true;
@@ -95,72 +97,6 @@ void processInput(GLFWwindow* window, float deltaTime) {
         cameraPos += movementVector / mag * cameraSpeed * (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ? 2.0f : 1.0f);
 }
 
-std::string loadShaderSource(const char* path) {
-    std::ifstream file(path);
-    if (!file) {
-        std::cerr << "Failed to open shader file: " << path << '\n';
-        return "";
-    }
-    std::stringstream ss;
-    ss << file.rdbuf();
-    return ss.str();
-}
-unsigned int compileShader(unsigned int type, const char* source) {
-    unsigned int shader = glCreateShader(type);
-    glShaderSource(shader, 1, &source, nullptr);
-    glCompileShader(shader);
-
-    int success;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        char infoLog[1024];
-        glGetShaderInfoLog(shader, 1024, nullptr, infoLog);
-        std::cerr << "Shader compilation failed ("
-            << (type == GL_VERTEX_SHADER ? "Vertex" : "Fragment")
-            << "):\n" << infoLog << '\n';
-        glDeleteShader(shader);
-        return 0;
-    }
-
-    return shader;
-}
-unsigned int createShaderProgram(const char* vertexPath, const char* fragmentPath) {
-    std::string vCode = loadShaderSource(vertexPath);
-    std::string fCode = loadShaderSource(fragmentPath);
-
-    if (vCode.empty() || fCode.empty()) {
-        std::cerr << "Shader source code is empty.\n";
-        return 0;
-    }
-
-    unsigned int vs = compileShader(GL_VERTEX_SHADER, vCode.c_str());
-    unsigned int fs = compileShader(GL_FRAGMENT_SHADER, fCode.c_str());
-
-    if (vs == 0 || fs == 0) {
-        std::cerr << "Shader compilation failed, program not created.\n";
-        return 0;
-    }
-
-    unsigned int program = glCreateProgram();
-    glAttachShader(program, vs);
-    glAttachShader(program, fs);
-    glLinkProgram(program);
-
-    int success;
-    glGetProgramiv(program, GL_LINK_STATUS, &success);
-    if (!success) {
-        char infoLog[1024];
-        glGetProgramInfoLog(program, 1024, nullptr, infoLog);
-        std::cerr << "Shader program linking failed:\n" << infoLog << '\n';
-        glDeleteProgram(program);
-        program = 0;
-    }
-
-    glDeleteShader(vs);
-    glDeleteShader(fs);
-    return program;
-}
-
 int main() {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -196,16 +132,17 @@ int main() {
         lastFrame = currentFrame;
         //std::cout << 1 / deltaTime << std::endl;
 
+        int width, height;
+        glfwGetFramebufferSize(window, &width, &height);
+        if (height == 0) height = 1;
+        float aspect = static_cast<float>(width) / height;
+
         processInput(window, deltaTime);
 
         glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(shaderProgram);
-
-        float timeValue = glfwGetTime();
-        glUseProgram(shaderProgram);
-        glUniform1f(glGetUniformLocation(shaderProgram, "uTime"), timeValue);
         
         // Model Matrix
         glm::mat4 model = glm::mat4(1.0f);
@@ -219,13 +156,17 @@ int main() {
         view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
         // Projection Matrix
-        glm::mat4 projection = glm::perspective(glm::radians(90.0f), (float)WIDTH / HEIGHT, 0.1f, 100.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(90.0f), aspect, 0.1f, 100.0f);
 
         // Sending Uniforms to GPU
+        // Vertex Shader Uniforms
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
         glUniform1f(glGetUniformLocation(shaderProgram, "uTime"), glfwGetTime());
+        // Fragment Shader Uniforms
+        glUniform3fv(glGetUniformLocation(shaderProgram, "lightDir"), 1, glm::value_ptr(lightDir));
+        glUniform3fv(glGetUniformLocation(shaderProgram, "viewPos"), 1, glm::value_ptr(cameraPos));
         
         // Draw
         plane.draw();
