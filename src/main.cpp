@@ -150,7 +150,7 @@ int main() {
         return glm::fract(sin(n) * 43758.5453123f);
         };
 
-    for (int i = 0; i < NUM_WAVES; ++i) {
+    /*for (int i = 0; i < NUM_WAVES; ++i) {
         float wavelength = WAVELENGTH_0 * pow(R, i);
         float amplitude = AMPLITUDE_0 * pow(R, ALPHA * i);
         float speed = SPEED_0 * pow(R, BETA * i);
@@ -173,7 +173,7 @@ int main() {
     glUniform1fv(glGetUniformLocation(shaderProgram, "amplitudes"), NUM_WAVES, amplitudes.data());
     glUniform1fv(glGetUniformLocation(shaderProgram, "wavelengths"), NUM_WAVES, wavelengths.data());
     glUniform1fv(glGetUniformLocation(shaderProgram, "speeds"), NUM_WAVES, speeds.data());
-    glUniform2fv(glGetUniformLocation(shaderProgram, "directions"), NUM_WAVES, &directions[0].x);
+    glUniform2fv(glGetUniformLocation(shaderProgram, "directions"), NUM_WAVES, &directions[0].x);*/
 
 
     float lastFrame = 0.0f;
