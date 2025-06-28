@@ -31,17 +31,20 @@ const int NUM_WAVES = 30;
 
 const float planeScale = 1.0f;
 
-const float R             = 0.60f; //  scale decay
-const float ALPHA         = 0.8f;  //  amplitude decay
-const float BETA          = 0.7f;  //  speed decay
-const float WAVELENGTH_0  = 60.0f; //  initial wavelength
-const float AMPLITUDE_0   = 1.5f;  //  initial amplitude
-const float SPEED_0       = 7.5f;  //  initial speed
+//const float R             = 0.60f; //  scale decay
+//const float ALPHA         = 0.8f;  //  amplitude decay
+//const float BETA          = 0.7f;  //  speed decay
+//const float WAVELENGTH_0  = 60.0f; //  initial wavelength
+//const float AMPLITUDE_0   = 1.5f;  //  initial amplitude
+//const float SPEED_0       = 7.5f;  //  initial speed
 
-std::vector<float> amplitudes(NUM_WAVES);
-std::vector<float> wavelengths(NUM_WAVES);
-std::vector<float> speeds(NUM_WAVES);
-std::vector<glm::vec2> directions(NUM_WAVES);
+//std::vector<float> amplitudes(NUM_WAVES);
+//std::vector<float> wavelengths(NUM_WAVES);
+//std::vector<float> speeds(NUM_WAVES);
+//std::vector<glm::vec2> directions(NUM_WAVES);
+std::vector<float> A(NUM_WAVES);
+std::vector<float> K(NUM_WAVES);
+std::vector<float> W(NUM_WAVES);
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     static float lastX = 800.0f / 2.0;
