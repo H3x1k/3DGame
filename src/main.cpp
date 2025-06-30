@@ -27,7 +27,7 @@ bool firstMouse = true;
 
 float sensitivity = 0.1f;
 
-const int NUM_WAVES = 30;
+const int NUM_WAVES = 10;
 
 const float planeScale = 1.0f;
 
@@ -147,9 +147,9 @@ int main() {
     PlaneMesh plane(256);
 
 
-    auto hash = [](float n) -> float {
+    /*auto hash = [](float n) -> float {
         return glm::fract(sin(n) * 43758.5453123f);
-        };
+        };*/
 
     /*for (int i = 0; i < NUM_WAVES; ++i) {
         float wavelength = WAVELENGTH_0 * pow(R, i);
@@ -231,8 +231,8 @@ int main() {
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
         glUniform1f(glGetUniformLocation(shaderProgram, "uTime"), glfwGetTime());
         // Fragment Shader Uniforms
-        glUniform3fv(glGetUniformLocation(shaderProgram, "lightDir"), 1, glm::value_ptr(lightDir));
-        glUniform3fv(glGetUniformLocation(shaderProgram, "viewPos"), 1, glm::value_ptr(cameraPos));
+        //glUniform3fv(glGetUniformLocation(shaderProgram, "lightDir"), 1, glm::value_ptr(lightDir));
+        //glUniform3fv(glGetUniformLocation(shaderProgram, "viewPos"), 1, glm::value_ptr(cameraPos));
         
         // Draw
         plane.draw();
