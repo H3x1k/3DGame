@@ -3,6 +3,7 @@ out vec4 FragColor;
 
 in vec3 FragPos;
 in vec3 Normal;
+in float secDeriv;
 
 uniform vec3 viewPos;
 uniform vec3 lightDir;
@@ -21,10 +22,14 @@ void main() {
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 reflectDir = reflect(lightDir, Normal);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-    vec3 specular = spec * vec3(1.0);
+    vec3 specular = spec * vec3(0.9);
+
+    // Foam
+    float foam = max(-secDeriv / 100.0, 0.0);
+    vec3 foamColor = vec3(1.0);
 
     vec3 waterColor = ambient + diffuse + specular;
+    vec3 finalColor = mix(waterColor, foamColor, foam);
 
-    FragColor = vec4(waterColor, 1.0);
-    //FragColor = vec4(FragPos, 1.0);
+    FragColor = vec4(finalColor, 1.0);
 }

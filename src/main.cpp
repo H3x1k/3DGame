@@ -27,22 +27,11 @@ bool firstMouse = true;
 
 float sensitivity = 0.1f;
 
-const int NUM_WAVES = 100;
+const int NUM_WAVES = 50;
 
 const float planeScale = 10.0f;
+const float heightScale = 0.2f;
 
-//const float R             = 0.60f; //  scale decay
-//const float ALPHA         = 0.8f;  //  amplitude decay
-//const float BETA          = 0.7f;  //  speed decay
-//const float WAVELENGTH_0  = 60.0f; //  initial wavelength
-//const float AMPLITUDE_0   = 1.5f;  //  initial amplitude
-//const float SPEED_0       = 7.5f;  //  initial speed
-
-//std::vector<float> amplitudes(NUM_WAVES);
-//std::vector<float> wavelengths(NUM_WAVES);
-//std::vector<float> speeds(NUM_WAVES);
-//std::vector<glm::vec2> directions(NUM_WAVES);
-//std::vector<float> A(NUM_WAVES);
 std::vector<float> Kx(NUM_WAVES);
 std::vector<float> Ky(NUM_WAVES);
 std::vector<float> W(NUM_WAVES);
@@ -140,8 +129,8 @@ int main() {
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    //glEnable(GL_BLEND);
-    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     GLint shaderProgram = LoadShaderProgram("../Shaders/vert_exp.glsl", "../Shaders/frag_exp.glsl");
 
@@ -149,10 +138,10 @@ int main() {
 
     srand(time(0));
     for (int i = 0; i < NUM_WAVES; i++) {
-        float r = ((float)rand()) / RAND_MAX * 25 + 1;
+        float r = ((float)rand()) / RAND_MAX * 15 + 1;
         Kx[i] = r * cos(1000.0f * i + 154.0f);
         Ky[i] = r * sin(1000.0f * i + 154.0f);
-        W[i] = 2.0f * sin(1000.0f * (i+1)) + 1;
+        W[i] = 3.0f * sin(1000.0f * (i+1)) + 1;
         P[i] = i;
     }
     
@@ -162,6 +151,7 @@ int main() {
     glUniform1fv(glGetUniformLocation(shaderProgram, "W"), NUM_WAVES, W.data());
     glUniform1fv(glGetUniformLocation(shaderProgram, "P"), NUM_WAVES, P.data());
     glUniform1f(glGetUniformLocation(shaderProgram, "scale"), planeScale);
+    glUniform1f(glGetUniformLocation(shaderProgram, "hscale"), heightScale);
 
     float lastFrame = 0.0f;
     float startTime = glfwGetTime();
@@ -186,7 +176,7 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
         // Model Matrix
-        glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(planeScale, 1.0f, planeScale));
+        glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(planeScale, heightScale, planeScale));
 
         // View Matrix
         glm::mat4 yawMat = glm::rotate(glm::mat4(1.0), glm::radians(yaw), glm::vec3(0.0, 1.0, 0.0));
