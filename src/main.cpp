@@ -42,8 +42,9 @@ const float planeScale = 1.0f;
 //std::vector<float> wavelengths(NUM_WAVES);
 //std::vector<float> speeds(NUM_WAVES);
 //std::vector<glm::vec2> directions(NUM_WAVES);
-std::vector<float> A(NUM_WAVES);
-std::vector<float> K(NUM_WAVES);
+//std::vector<float> A(NUM_WAVES);
+std::vector<float> Kx(NUM_WAVES);
+std::vector<float> Ky(NUM_WAVES);
 std::vector<float> W(NUM_WAVES);
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
@@ -141,7 +142,7 @@ int main() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    GLint shaderProgram = LoadShaderProgram("../Shaders/vert.glsl", "../Shaders/frag.glsl");
+    GLint shaderProgram = LoadShaderProgram("../Shaders/vert_exp.glsl", "../Shaders/frag_exp.glsl");
 
     PlaneMesh plane(256);
 
@@ -175,6 +176,15 @@ int main() {
     glUniform1fv(glGetUniformLocation(shaderProgram, "speeds"), NUM_WAVES, speeds.data());
     glUniform2fv(glGetUniformLocation(shaderProgram, "directions"), NUM_WAVES, &directions[0].x);*/
 
+    for (int i = 0; i < NUM_WAVES; ++i) {
+        Kx[i] = i * cos(i);
+        Ky[i] = i * sin(i);
+        W[i] = 2.0f * sin(20000.0f * i);
+    }
+
+    glUniform1fv(glGetUniformLocation(shaderProgram, "Kx"), NUM_WAVES, Kx.data());
+    glUniform1fv(glGetUniformLocation(shaderProgram, "Ky"), NUM_WAVES, Ky.data());
+    glUniform1fv(glGetUniformLocation(shaderProgram, "W"), NUM_WAVES, W.data());
 
     float lastFrame = 0.0f;
     float startTime = glfwGetTime();
