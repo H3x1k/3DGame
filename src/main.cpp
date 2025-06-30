@@ -27,9 +27,9 @@ bool firstMouse = true;
 
 float sensitivity = 0.1f;
 
-const int NUM_WAVES = 10;
+const int NUM_WAVES = 100;
 
-const float planeScale = 1.0f;
+const float planeScale = 10.0f;
 
 //const float R             = 0.60f; //  scale decay
 //const float ALPHA         = 0.8f;  //  amplitude decay
@@ -144,18 +144,19 @@ int main() {
 
     GLint shaderProgram = LoadShaderProgram("../Shaders/vert_exp.glsl", "../Shaders/frag_exp.glsl");
 
-    PlaneMesh plane(256);
+    PlaneMesh plane(512);
 
     for (int i = 0; i < NUM_WAVES; i++) {
         Kx[i] = (i+1) * cos(i+1);
         Ky[i] = (i+1) * sin(i+1);
-        W[i] = 2.0f * sin(1000.0f * (i+1));
+        W[i] = 2.0f * sin(1000.0f * (i+1)) + 1;
     }
     
     glUseProgram(shaderProgram);
     glUniform1fv(glGetUniformLocation(shaderProgram, "Kx"), NUM_WAVES, Kx.data());
     glUniform1fv(glGetUniformLocation(shaderProgram, "Ky"), NUM_WAVES, Ky.data());
     glUniform1fv(glGetUniformLocation(shaderProgram, "W"), NUM_WAVES, W.data());
+    glUniform1f(glGetUniformLocation(shaderProgram, "scale"), planeScale);
 
     float lastFrame = 0.0f;
     float startTime = glfwGetTime();
@@ -201,7 +202,7 @@ int main() {
         glUniform1f(glGetUniformLocation(shaderProgram, "uTime"), glfwGetTime());
         // Fragment Shader Uniforms
         glUniform3fv(glGetUniformLocation(shaderProgram, "lightDir"), 1, glm::value_ptr(lightDir));
-        //glUniform3fv(glGetUniformLocation(shaderProgram, "viewPos"), 1, glm::value_ptr(cameraPos));
+        glUniform3fv(glGetUniformLocation(shaderProgram, "viewPos"), 1, glm::value_ptr(cameraPos));
         
         // Draw
         plane.draw();

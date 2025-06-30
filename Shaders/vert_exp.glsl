@@ -9,8 +9,9 @@ uniform float uTime;
 out vec3 FragPos;
 out vec3 Normal;
 
-const int NUM_WAVES = 10;
+const int NUM_WAVES = 100;
 
+uniform float scale;
 uniform float Kx[NUM_WAVES];
 uniform float Ky[NUM_WAVES];
 uniform float W[NUM_WAVES];
@@ -24,23 +25,22 @@ void main() {
     vec3 pos = aPos;
     float heightOffset = 0.0;
 
-    for (int i = 0; i < NUM_WAVES; i++) {
-        if (Kx[i] != 0.0 || Ky[i] != 0.0)
-            heightOffset += Wave(vec2(pos.x, pos.z), vec2(Kx[i], Ky[i]), W[i], uTime);
-    }
-
     float dx = 0.0;
     float dz = 0.0;
 
     for (int i = 0; i < NUM_WAVES; i++) {
-        vec2 K = vec2(Kx[i], Ky[i]);
-        vec2 position = vec2(pos.x, pos.z);
-        float w = Wave(position, K, W[i], uTime) * cos(dot(K, position) - W * t)
-        dx += w * Kx[i];
-        dz += w * Ky[i];
+        vec2 Ki = vec2(Kx[i], Ky[i]);
+        vec2 position = vec2(pos.x, pos.z) * scale;
+
+        float a = Wave(position, Ki, W[i], uTime);
+        float cos = cos(dot(Ki, position) - W[i] * uTime);
+
+        heightOffset += a;
+        dx += a * cos * Kx[i];
+        dz += a * cos * Ky[i];
     }
 
-    Normal = normalize(vec3(dx, 1, dz));
+    Normal = normalize(vec3(-dx, 1, -dz));
 
     pos += vec3(0.0, heightOffset, 0.0);
 
