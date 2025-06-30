@@ -46,6 +46,7 @@ const float planeScale = 10.0f;
 std::vector<float> Kx(NUM_WAVES);
 std::vector<float> Ky(NUM_WAVES);
 std::vector<float> W(NUM_WAVES);
+std::vector<float> P(NUM_WAVES);
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     static float lastX = 800.0f / 2.0;
@@ -146,16 +147,20 @@ int main() {
 
     PlaneMesh plane(512);
 
+    srand(time(0));
     for (int i = 0; i < NUM_WAVES; i++) {
-        Kx[i] = (i+1) * cos(i+1);
-        Ky[i] = (i+1) * sin(i+1);
+        float r = ((float)rand()) / RAND_MAX * 25 + 1;
+        Kx[i] = r * cos(1000.0f * i + 154.0f);
+        Ky[i] = r * sin(1000.0f * i + 154.0f);
         W[i] = 2.0f * sin(1000.0f * (i+1)) + 1;
+        P[i] = i;
     }
     
     glUseProgram(shaderProgram);
     glUniform1fv(glGetUniformLocation(shaderProgram, "Kx"), NUM_WAVES, Kx.data());
     glUniform1fv(glGetUniformLocation(shaderProgram, "Ky"), NUM_WAVES, Ky.data());
     glUniform1fv(glGetUniformLocation(shaderProgram, "W"), NUM_WAVES, W.data());
+    glUniform1fv(glGetUniformLocation(shaderProgram, "P"), NUM_WAVES, P.data());
     glUniform1f(glGetUniformLocation(shaderProgram, "scale"), planeScale);
 
     float lastFrame = 0.0f;

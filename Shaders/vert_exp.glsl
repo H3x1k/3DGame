@@ -15,10 +15,11 @@ uniform float scale;
 uniform float Kx[NUM_WAVES];
 uniform float Ky[NUM_WAVES];
 uniform float W[NUM_WAVES];
+uniform float P[NUM_WAVES];
 
-float Wave(vec2 position, vec2 K, float W, float t) {
+float Wave(vec2 position, vec2 K, float W, float P, float t) {
     float Kmag = length(K);
-    return exp(sin(dot(K, position) - W * t) - 1.0) / Kmag / Kmag;
+    return exp(sin(dot(K, position) - W * t - P) - 1.0) / Kmag / Kmag;
 }
 
 void main() {
@@ -32,8 +33,8 @@ void main() {
         vec2 Ki = vec2(Kx[i], Ky[i]);
         vec2 position = vec2(pos.x, pos.z) * scale;
 
-        float a = Wave(position, Ki, W[i], uTime);
-        float cos = cos(dot(Ki, position) - W[i] * uTime);
+        float a = Wave(position, Ki, W[i], P[i], uTime);
+        float cos = cos(dot(Ki, position) - W[i] * uTime - P[i]);
 
         heightOffset += a;
         dx += a * cos * Kx[i];
