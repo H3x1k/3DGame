@@ -14,7 +14,7 @@
 const unsigned int WIDTH = 800;
 const unsigned int HEIGHT = 800;
 
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 0.0f);
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.5f, 3.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraRight = glm::vec3(1.0f, 0.0f, 0.0f);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -52,8 +52,8 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     static float lastY = 600.0f / 2.0;
 
     if (firstMouse) {
-        lastX = xpos;
-        lastY = ypos;
+        lastX = (float) xpos;
+        lastY = (float) ypos;
         firstMouse = false;
     }
 
@@ -139,49 +139,20 @@ int main() {
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //glEnable(GL_BLEND);
+    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     GLint shaderProgram = LoadShaderProgram("../Shaders/vert_exp.glsl", "../Shaders/frag_exp.glsl");
 
     PlaneMesh plane(256);
 
-
-    /*auto hash = [](float n) -> float {
-        return glm::fract(sin(n) * 43758.5453123f);
-        };*/
-
-    /*for (int i = 0; i < NUM_WAVES; ++i) {
-        float wavelength = WAVELENGTH_0 * pow(R, i);
-        float amplitude = AMPLITUDE_0 * pow(R, ALPHA * i);
-        float speed = SPEED_0 * pow(R, BETA * i);
-
-        float k = 6.28318f / wavelength;
-        if (k * amplitude >= 1.0f)
-            amplitude = 0.9f / k;
-
-        float angle = hash(float(i)) * 6.28318f;
-        glm::vec2 direction = glm::vec2(cos(angle), sin(angle));
-
-        amplitudes[i] = amplitude;
-        wavelengths[i] = wavelength;
-        speeds[i] = speed;
-        directions[i] = direction;
+    for (int i = 0; i < NUM_WAVES; i++) {
+        Kx[i] = (i+1) * cos(i+1);
+        Ky[i] = (i+1) * sin(i+1);
+        W[i] = 2.0f * sin(1000.0f * (i+1));
     }
-
+    
     glUseProgram(shaderProgram);
-
-    glUniform1fv(glGetUniformLocation(shaderProgram, "amplitudes"), NUM_WAVES, amplitudes.data());
-    glUniform1fv(glGetUniformLocation(shaderProgram, "wavelengths"), NUM_WAVES, wavelengths.data());
-    glUniform1fv(glGetUniformLocation(shaderProgram, "speeds"), NUM_WAVES, speeds.data());
-    glUniform2fv(glGetUniformLocation(shaderProgram, "directions"), NUM_WAVES, &directions[0].x);*/
-
-    for (int i = 0; i < NUM_WAVES; ++i) {
-        Kx[i] = i * cos(i);
-        Ky[i] = i * sin(i);
-        W[i] = 2.0f * sin(20000.0f * i);
-    }
-
     glUniform1fv(glGetUniformLocation(shaderProgram, "Kx"), NUM_WAVES, Kx.data());
     glUniform1fv(glGetUniformLocation(shaderProgram, "Ky"), NUM_WAVES, Ky.data());
     glUniform1fv(glGetUniformLocation(shaderProgram, "W"), NUM_WAVES, W.data());
@@ -207,8 +178,6 @@ int main() {
 
         glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        
         
         // Model Matrix
         glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(planeScale, 1.0f, planeScale));
@@ -231,7 +200,7 @@ int main() {
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
         glUniform1f(glGetUniformLocation(shaderProgram, "uTime"), glfwGetTime());
         // Fragment Shader Uniforms
-        //glUniform3fv(glGetUniformLocation(shaderProgram, "lightDir"), 1, glm::value_ptr(lightDir));
+        glUniform3fv(glGetUniformLocation(shaderProgram, "lightDir"), 1, glm::value_ptr(lightDir));
         //glUniform3fv(glGetUniformLocation(shaderProgram, "viewPos"), 1, glm::value_ptr(cameraPos));
         
         // Draw
