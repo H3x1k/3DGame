@@ -10,7 +10,7 @@ out vec3 FragPos;
 out vec3 Normal;
 out float secDeriv;
 
-const int NUM_WAVES = 50;
+const int NUM_WAVES = 30;
 
 uniform float scale;
 uniform float hscale;
@@ -49,7 +49,7 @@ void main() {
     }
 
     Normal = normalize(vec3(-dx, 1/hscale, -dz));
-    secDeriv = (dxx + dyy) * heightOffset * heightOffset * sign(heightOffset) * hscale;
+    secDeriv = pow(dxx + dyy, 2) * heightOffset * heightOffset * sign(heightOffset) * hscale;
 
     pos += vec3(0.0, heightOffset, 0.0);
 

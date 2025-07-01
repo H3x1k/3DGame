@@ -27,10 +27,10 @@ bool firstMouse = true;
 
 float sensitivity = 0.1f;
 
-const int NUM_WAVES = 50;
+const int NUM_WAVES = 30;
 
-const float planeScale = 10.0f;
-const float heightScale = 0.2f;
+const float planeScale = 20.0f;
+const float heightScale = 0.4f;
 
 std::vector<float> Kx(NUM_WAVES);
 std::vector<float> Ky(NUM_WAVES);
@@ -134,7 +134,7 @@ int main() {
 
     GLint shaderProgram = LoadShaderProgram("../Shaders/vert_exp.glsl", "../Shaders/frag_exp.glsl");
 
-    PlaneMesh plane(512);
+    PlaneMesh plane(32 * planeScale);
 
     srand(time(0));
     for (int i = 0; i < NUM_WAVES; i++) {
@@ -163,7 +163,7 @@ int main() {
         float currentFrame = glfwGetTime();
         float deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
-        //std::cout << 1 / deltaTime << std::endl;
+        std::cout << 1 / deltaTime << std::endl;
 
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
@@ -187,7 +187,7 @@ int main() {
         view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
         // Projection Matrix
-        glm::mat4 projection = glm::perspective(glm::radians(90.0f), aspect, 0.1f, 100.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(90.0f), aspect, 0.1f, 1000.0f);
 
         // Sending Uniforms to GPU
         // Vertex Shader Uniforms
