@@ -10,7 +10,7 @@ out vec3 FragPos;
 out vec3 Normal;
 out float secDeriv;
 
-const int NUM_WAVES = 30;
+const int NUM_WAVES = 60;
 
 uniform float scale;
 uniform float hscale;

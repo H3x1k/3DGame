@@ -7,6 +7,7 @@
 #include <sstream>
 #include <iostream>
 #include <vector>
+#include <cmath>
 
 #include "PlaneMesh.h";
 #include "Shader.h";
@@ -27,7 +28,7 @@ bool firstMouse = true;
 
 float sensitivity = 0.1f;
 
-const int NUM_WAVES = 30;
+const int NUM_WAVES = 60;
 
 const float planeScale = 20.0f;
 const float heightScale = 0.4f;
@@ -107,6 +108,21 @@ void processInput(GLFWwindow* window, float deltaTime) {
         cameraPos += movementVector / mag * cameraSpeed * (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ? 2.0f : 1.0f);
 }
 
+float Wave(glm::vec2 position, glm::vec2 K, float W, float P, float t) {
+    float Kmag = length(K);
+    return exp(sin(dot(K, position) - W * t - P) - 1.0) / Kmag / Kmag;
+}
+float waterHeight(glm::vec2 xzpos, float uTime) {
+    float heightOffset = 0.0f;
+    for (int i = 0; i < NUM_WAVES; i++) {
+        glm::vec2 Ki = glm::vec2(Kx[i], Ky[i]);
+        glm::vec2 position = glm::vec2(xzpos.x, xzpos.y) * planeScale;
+        float a = Wave(position, Ki, W[i], P[i], uTime);
+        heightOffset += a;
+    }
+    return heightOffset * heightScale;
+}
+
 int main() {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -133,8 +149,32 @@ int main() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     GLint shaderProgram = LoadShaderProgram("../Shaders/vert_exp.glsl", "../Shaders/frag_exp.glsl");
+    GLint shaderProgram2 = LoadShaderProgram("../Shaders/vert.glsl", "../Shaders/frag.glsl");
 
     PlaneMesh plane(32 * planeScale);
+
+    std::vector<float> vertices = {
+         1.0f, 0.0f,  1.0f,
+         1.0f, 0.0f, -1.0f,
+        -1.0f, 0.0f,  1.0f,
+         1.0f, 0.0f, -1.0f,
+        -1.0f, 0.0f, -1.0f,
+        -1.0f, 0.0f,  1.0f,
+    };
+
+    GLuint VAO, VBO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+
 
     srand(time(0));
     for (int i = 0; i < NUM_WAVES; i++) {
@@ -177,6 +217,7 @@ int main() {
         
         // Model Matrix
         glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(planeScale, heightScale, planeScale));
+        glm::mat4 model2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, waterHeight(glm::vec2(0.0f, 0.0f), glfwGetTime()), 0.0f));
 
         // View Matrix
         glm::mat4 yawMat = glm::rotate(glm::mat4(1.0), glm::radians(yaw), glm::vec3(0.0, 1.0, 0.0));
@@ -189,7 +230,16 @@ int main() {
         // Projection Matrix
         glm::mat4 projection = glm::perspective(glm::radians(90.0f), aspect, 0.1f, 1000.0f);
 
-        // Sending Uniforms to GPU
+        glUseProgram(shaderProgram2);
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram2, "model"), 1, GL_FALSE, glm::value_ptr(model2));
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram2, "view"), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram2, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+        glBindVertexArray(VAO);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
+
+        glUseProgram(shaderProgram);
         // Vertex Shader Uniforms
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
@@ -198,9 +248,10 @@ int main() {
         // Fragment Shader Uniforms
         glUniform3fv(glGetUniformLocation(shaderProgram, "lightDir"), 1, glm::value_ptr(lightDir));
         glUniform3fv(glGetUniformLocation(shaderProgram, "viewPos"), 1, glm::value_ptr(cameraPos));
-        
         // Draw
         plane.draw();
+
+        
 
         glfwSwapBuffers(window);
         glfwPollEvents();
